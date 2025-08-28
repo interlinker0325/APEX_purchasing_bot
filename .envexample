@@ -1,0 +1,14 @@
+# Apex Trader Funding Credentials
+USER_NAME="tran325"
+PASSWORD="Pwd123!@#"
+
+# Coupon Information
+COUPON_CODE="JAYPELLE"
+
+# Credit Card Information
+CARD_NUMBER=1234567890123456
+CARD_EXPIRED_MONTH=12
+CARD_EXPIRED_YEAR=2025
+CARD_CODE=123
+
+LOOP_COUNT=2

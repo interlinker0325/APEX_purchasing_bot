@@ -327,6 +327,9 @@ def run_automation(session_id, username, password, card_number, card_expired_mon
             add_log(session_id, f"📊 Summary: {loop_count} accounts processed")
             session['status'] = 'completed'
         
+        # Ensure status is properly set before cleanup
+        print(f"[DEBUG] Final status set to: {session['status']}")
+        
     except Exception as e:
         add_log(session_id, f"❌ Automation error: {str(e)}")
         session['status'] = 'error'
@@ -390,6 +393,9 @@ def get_status(session_id):
     session = get_session(session_id)
     if not session:
         return jsonify({'error': 'Session not found'}), 404
+    
+    # Debug logging
+    print(f"[DEBUG] Status request for session {session_id}: {session['status']}")
         
     return jsonify({
         'status': session['status'],

@@ -255,7 +255,7 @@ def run_automation(session_id, username, password, card_number, card_expired_mon
                 break
                 
             session['current_iteration'] = iteration + 1
-            add_log(session_id, f"Processing account {iteration + 1}/{loop_count}")
+            add_log(session_id, f"🔄 Processing account {iteration + 1}/{loop_count}")
             
             try:
                 # Navigate to signup page
@@ -320,21 +320,24 @@ def run_automation(session_id, username, password, card_number, card_expired_mon
                 continue
         
         if session['should_stop']:
-            add_log(session_id, "Purchase process stopped by user.")
+            add_log(session_id, "🛑 Purchase process stopped by user.")
+            session['status'] = 'stopped'
         else:
-            add_log(session_id, "All purchases completed successfully!")
-            
-        session['status'] = 'completed'
+            add_log(session_id, "✅ All purchases completed successfully!")
+            add_log(session_id, f"📊 Summary: {loop_count} accounts processed")
+            session['status'] = 'completed'
         
     except Exception as e:
-        add_log(session_id, f"Automation error: {str(e)}")
+        add_log(session_id, f"❌ Automation error: {str(e)}")
         session['status'] = 'error'
     finally:
         if session and session['driver']:
             try:
+                add_log(session_id, "🔄 Closing browser...")
                 session['driver'].quit()
-            except:
-                pass
+                add_log(session_id, "✅ Browser closed successfully")
+            except Exception as e:
+                add_log(session_id, f"⚠️ Error closing browser: {str(e)}")
             session['driver'] = None
 
 @app.route('/api/purchase', methods=['POST'])

@@ -31,5 +31,7 @@ webdriver-manager==4.0.2
 websocket-client==1.8.0
 websockets==15.0.1
 wsproto==1.2.0
+Flask==3.0.0
+Flask-CORS==4.0.0
 
 # setuptools==80.9.0

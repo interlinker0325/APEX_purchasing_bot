@@ -230,6 +230,7 @@ def run_automation(session_id, username, password, card_number, card_expired_mon
                         if error_text and ("invalid" in error_text.lower() or "incorrect" in error_text.lower() or "failed" in error_text.lower()):
                             add_log(session_id, f"❌ Login failed: {error_text}")
                             session['status'] = 'error'
+                            print(f"[DEBUG] Login failed - setting status to error for session {session_id}")
                             driver.quit()
                             return
             except:
@@ -245,6 +246,7 @@ def run_automation(session_id, username, password, card_number, card_expired_mon
                 add_log(session_id, "❌ Login failed: Still on login page after login attempt")
                 add_log(session_id, f"Current URL: {current_url}")
                 session['status'] = 'error'
+                print(f"[DEBUG] Login failed - setting status to error for session {session_id}")
                 driver.quit()
                 return
             else:
@@ -351,6 +353,10 @@ def run_automation(session_id, username, password, card_number, card_expired_mon
             except Exception as e:
                 add_log(session_id, f"⚠️ Error closing browser: {str(e)}")
             session['driver'] = None
+            
+            # Final status update to ensure frontend gets the final state
+            print(f"[DEBUG] Final session status: {session['status']}")
+            add_log(session_id, f"🏁 Process finished with status: {session['status']}")
 
 @app.route('/api/purchase', methods=['POST'])
 def start_purchase():

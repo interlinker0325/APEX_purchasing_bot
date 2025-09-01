@@ -216,6 +216,36 @@ def run_automation(session_id, username, password, card_number, card_expired_mon
         login_button.click()
         time.sleep(5)
         
+        # Check if login was successful
+        try:
+            # Look for login error messages or check if we're still on login page
+            current_url = driver.current_url
+            if "member" not in current_url or "login" in current_url:
+                # Check for error messages
+                try:
+                    error_elements = driver.find_elements(By.CSS_SELECTOR, ".error, .alert-danger, .am-error")
+                    if error_elements:
+                        error_text = error_elements[0].text
+                        add_log(session_id, f"Login failed: {error_text}")
+                        session['status'] = 'error'
+                        driver.quit()
+                        return
+                except:
+                    pass
+                
+                # If still on login page, login likely failed
+                add_log(session_id, "Login failed: Still on login page after login attempt")
+                session['status'] = 'error'
+                driver.quit()
+                return
+            else:
+                add_log(session_id, "Login successful!")
+        except Exception as e:
+            add_log(session_id, f"Error checking login status: {str(e)}")
+            session['status'] = 'error'
+            driver.quit()
+            return
+        
         add_log(session_id, f"Starting purchase loop for {loop_count} accounts...")
         
         # Main workflow loop

@@ -218,30 +218,39 @@ def run_automation(session_id, username, password, card_number, card_expired_mon
         
         # Check if login was successful
         try:
-            # Look for login error messages or check if we're still on login page
+            # Wait a bit more for page to load
+            time.sleep(3)
+            
+            # Look for login error messages first
+            try:
+                error_elements = driver.find_elements(By.CSS_SELECTOR, ".error, .alert-danger, .am-error, .alert, .message")
+                if error_elements:
+                    for element in error_elements:
+                        error_text = element.text.strip()
+                        if error_text and ("invalid" in error_text.lower() or "incorrect" in error_text.lower() or "failed" in error_text.lower()):
+                            add_log(session_id, f"❌ Login failed: {error_text}")
+                            session['status'] = 'error'
+                            driver.quit()
+                            return
+            except:
+                pass
+            
+            # Check current URL and page content
             current_url = driver.current_url
-            if "member" not in current_url or "login" in current_url:
-                # Check for error messages
-                try:
-                    error_elements = driver.find_elements(By.CSS_SELECTOR, ".error, .alert-danger, .am-error")
-                    if error_elements:
-                        error_text = error_elements[0].text
-                        add_log(session_id, f"Login failed: {error_text}")
-                        session['status'] = 'error'
-                        driver.quit()
-                        return
-                except:
-                    pass
-                
-                # If still on login page, login likely failed
-                add_log(session_id, "Login failed: Still on login page after login attempt")
+            page_source = driver.page_source.lower()
+            
+            # If still on login page or contains login elements, login failed
+            if ("login" in current_url or "member" not in current_url or 
+                "amember-login" in page_source or "amember-pass" in page_source):
+                add_log(session_id, "❌ Login failed: Still on login page after login attempt")
+                add_log(session_id, f"Current URL: {current_url}")
                 session['status'] = 'error'
                 driver.quit()
                 return
             else:
-                add_log(session_id, "Login successful!")
+                add_log(session_id, "✅ Login successful!")
         except Exception as e:
-            add_log(session_id, f"Error checking login status: {str(e)}")
+            add_log(session_id, f"❌ Error checking login status: {str(e)}")
             session['status'] = 'error'
             driver.quit()
             return

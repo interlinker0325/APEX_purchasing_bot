@@ -170,7 +170,7 @@ def handle_cookie_consent(driver, session_id):
 
     add_log(session_id, "Cookie consent handling completed, continuing with script...")
 
-def run_automation(session_id, username, password, card_number, card_expired_month, card_expired_year, card_code, loop_count, coupon_code):
+def run_automation(session_id, username, password, card_number, card_expired_month, card_expired_year, card_code, loop_count, coupon_code, selected_accounts):
     """Run the automation process in a separate thread for specific session"""
     try:
         add_log(session_id, "Starting automation process...")
@@ -258,6 +258,7 @@ def run_automation(session_id, username, password, card_number, card_expired_mon
             return
         
         add_log(session_id, f"Starting purchase loop for {loop_count} accounts...")
+        add_log(session_id, f"Selected account types: {', '.join(selected_accounts)}")
         
         # Main workflow loop
         for iteration in range(loop_count):
@@ -269,10 +270,14 @@ def run_automation(session_id, username, password, card_number, card_expired_mon
             add_log(session_id, f"🔄 Processing account {iteration + 1}/{loop_count}")
             
             try:
+                # Select account type for this iteration (cycle through selected accounts)
+                account_type = selected_accounts[iteration % len(selected_accounts)]
+                account_url = f'https://dashboard.apextraderfunding.com/signup/{account_type}'
+                
                 # Navigate to signup page
-                driver.get('https://dashboard.apextraderfunding.com/signup/50k-Tradovate')
+                driver.get(account_url)
                 time.sleep(5)
-                add_log(session_id, f"Navigated to signup page for account {iteration + 1}")
+                add_log(session_id, f"Navigated to signup page for account {iteration + 1} ({account_type})")
 
                 # Use coupon code from environment file
                 coupon = driver.find_element(By.ID, 'coupon-0')
@@ -324,7 +329,7 @@ def run_automation(session_id, username, password, card_number, card_expired_mon
                 
                 # Wait for processing
                 time.sleep(3)
-                add_log(session_id, f"Account {iteration + 1} purchased successfully!")
+                add_log(session_id, f"Account {iteration + 1} ({account_type}) purchased successfully!")
                 
             except Exception as e:
                 add_log(session_id, f"Error processing account {iteration + 1}: {str(e)}")
@@ -365,7 +370,7 @@ def start_purchase():
         data = request.json
         
         # Validate required fields
-        required_fields = ['username', 'password', 'cardNumber', 'cvv', 'expiryMonth', 'expiryYear', 'numberOfAccounts']
+        required_fields = ['username', 'password', 'cardNumber', 'cvv', 'expiryMonth', 'expiryYear', 'numberOfAccounts', 'selectedAccounts']
         for field in required_fields:
             if field not in data or not data[field]:
                 return jsonify({'error': f'Missing required field: {field}'}), 400
@@ -381,6 +386,7 @@ def start_purchase():
         card_expired_year = data['expiryYear']
         card_code = data['cvv']
         loop_count = int(data['numberOfAccounts'])
+        selected_accounts = data['selectedAccounts']
         
         # Optional coupon code from frontend, fallback to .env file
         coupon_code = data.get('couponCode', os.getenv('COUPON_CODE', 'JAYPELLE'))
@@ -388,7 +394,7 @@ def start_purchase():
         # Start automation in a separate thread
         thread = threading.Thread(
             target=run_automation,
-            args=(session_id, username, password, card_number, card_expired_month, card_expired_year, card_code, loop_count, coupon_code)
+            args=(session_id, username, password, card_number, card_expired_month, card_expired_year, card_code, loop_count, coupon_code, selected_accounts)
         )
         thread.daemon = True
         thread.start()

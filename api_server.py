@@ -171,7 +171,7 @@ def handle_cookie_consent(driver, session_id):
 
     add_log(session_id, "Cookie consent handling completed, continuing with script...")
 
-def run_automation(session_id, username, password, card_number, card_expired_month, card_expired_year, card_code, loop_count, coupon_code, selected_accounts):
+def run_automation(session_id, username, password, card_number, card_expired_month, card_expired_year, card_code, loop_count, coupon_code, selected_account):
     """Run the automation process in a separate thread for specific session"""
     try:
         add_log(session_id, "Starting automation process...")
@@ -267,7 +267,7 @@ def run_automation(session_id, username, password, card_number, card_expired_mon
             return
         
         add_log(session_id, f"Starting purchase loop for {loop_count} accounts...")
-        add_log(session_id, f"Selected account types: {', '.join(selected_accounts)}")
+        add_log(session_id, f"Selected account type: {selected_account}")
         
         # Main workflow loop
         for iteration in range(loop_count):
@@ -279,8 +279,8 @@ def run_automation(session_id, username, password, card_number, card_expired_mon
             add_log(session_id, f"🔄 Processing account {iteration + 1}/{loop_count}")
             
             try:
-                # Select account type for this iteration (cycle through selected accounts)
-                account_type = selected_accounts[iteration % len(selected_accounts)]
+                # Use the selected account type for all purchases
+                account_type = selected_account
                 account_url = f'https://dashboard.apextraderfunding.com/signup/{account_type}'
                 
                 # Navigate to signup page
@@ -379,7 +379,7 @@ def start_purchase():
         data = request.json
         
         # Validate required fields
-        required_fields = ['username', 'password', 'cardNumber', 'cvv', 'expiryMonth', 'expiryYear', 'numberOfAccounts', 'selectedAccounts']
+        required_fields = ['username', 'password', 'cardNumber', 'cvv', 'expiryMonth', 'expiryYear', 'numberOfAccounts', 'selectedAccount']
         for field in required_fields:
             if field not in data or not data[field]:
                 return jsonify({'error': f'Missing required field: {field}'}), 400
@@ -395,7 +395,7 @@ def start_purchase():
         card_expired_year = data['expiryYear']
         card_code = data['cvv']
         loop_count = int(data['numberOfAccounts'])
-        selected_accounts = data['selectedAccounts']
+        selected_account = data['selectedAccount']
         
         # Optional coupon code from frontend, fallback to .env file
         coupon_code = data.get('couponCode', os.getenv('COUPON_CODE', 'JAYPELLE'))
@@ -403,7 +403,7 @@ def start_purchase():
         # Start automation in a separate thread
         thread = threading.Thread(
             target=run_automation,
-            args=(session_id, username, password, card_number, card_expired_month, card_expired_year, card_code, loop_count, coupon_code, selected_accounts)
+            args=(session_id, username, password, card_number, card_expired_month, card_expired_year, card_code, loop_count, coupon_code, selected_account)
         )
         thread.daemon = True
         thread.start()

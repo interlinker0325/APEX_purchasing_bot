@@ -267,8 +267,7 @@ def run_automation(session_id, username, password, card_number, card_expired_mon
             return
         
         add_log(session_id, f"Starting purchase loop for {loop_count} accounts...")
-        account_type = selected_accounts[0] if selected_accounts else '50k-Tradovate'
-        add_log(session_id, f"Account type: {account_type} (purchasing {loop_count} of the same type)")
+        add_log(session_id, f"Selected account types: {', '.join(selected_accounts)}")
         
         # Main workflow loop
         for iteration in range(loop_count):
@@ -280,8 +279,8 @@ def run_automation(session_id, username, password, card_number, card_expired_mon
             add_log(session_id, f"🔄 Processing account {iteration + 1}/{loop_count}")
             
             try:
-                # Use the same account type for all purchases (first selected account)
-                account_type = selected_accounts[0] if selected_accounts else '50k-Tradovate'
+                # Select account type for this iteration (cycle through selected accounts)
+                account_type = selected_accounts[iteration % len(selected_accounts)]
                 account_url = f'https://dashboard.apextraderfunding.com/signup/{account_type}'
                 
                 # Navigate to signup page

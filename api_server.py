@@ -6,7 +6,9 @@ import os
 import sys
 import uuid
 from datetime import datetime
-import undetected_chromedriver as uc
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -184,9 +186,25 @@ def run_automation(session_id, username, password, card_number, card_expired_mon
         # Load coupon code from environment
         add_log(session_id, f"Using coupon code: {coupon_code}")
         
-        # Initialize Chrome driver
+        # Initialize Chrome driver with Selenium Manager
         add_log(session_id, "Initializing Chrome driver...")
-        driver = uc.Chrome()
+        
+        # Use Selenium Manager to automatically handle ChromeDriver
+        service = Service()
+        options = Options()
+        
+        # Add options to make it less detectable (similar to undetected-chromedriver)
+        options.add_argument('--no-sandbox')
+        options.add_argument('--disable-dev-shm-usage')
+        options.add_argument('--disable-blink-features=AutomationControlled')
+        options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        options.add_experimental_option('useAutomationExtension', False)
+        
+        driver = webdriver.Chrome(service=service, options=options)
+        
+        # Execute script to remove webdriver property
+        driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+        
         session['driver'] = driver
         
         # Navigate to login page
